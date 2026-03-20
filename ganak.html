@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ganak SMP • Irinthel • 1.20.1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <style>
+    body { 
+      font-family: 'Inter', system-ui, sans-serif; 
+      background: #000; 
+      color: white; 
+      overflow-x: hidden; 
+    }
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 1.2s ease;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    canvas.matrix { position: absolute; inset: 0; }
+    .logo-glow {
+      animation: glow 3s infinite alternate;
+      filter: drop-shadow(0 0 40px #a020f0) drop-shadow(0 0 80px #7b2cbf);
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 20px #c026d3, 0 0 40px #7e22ce; }
+      to   { text-shadow: 0 0 60px #c026d3, 0 0 120px #a855f7, 0 0 180px #7e22ce; }
+    }
+    .matrix-purple { color: #c026d3; }
+    .matrix-blue   { color: #3b82f6; }
+    .content { opacity: 0; transition: opacity 1.5s ease; }
+    .content.show { opacity: 1; }
+    .hero-bg {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .purple-glow { text-shadow: 0 0 30px #c026d3, 0 0 60px #7e22ce; }
+    .orb { animation: pulse 4s infinite; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 40px #c026d3; }
+      50% { box-shadow: 0 0 80px #a855f7, 0 0 120px #7e22ce; }
+    }
+    .scroll-container {
+      background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(30,0,60,0.7));
+      border: 3px solid #a855f7;
+      box-shadow: 0 0 60px #c026d3 inset;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tela de loading Matrix -->
+  <div id="loading">
+    <canvas id="matrix" class="matrix"></canvas>
+    <div class="relative z-10 text-center px-6">
+      <img src="SUA_LOGO_URL_AQUI" alt="Ganak Logo" class="mx-auto w-64 md:w-96 mb-8 logo-glow rounded-2xl border-4 border-purple-700/50 shadow-2xl shadow-purple-900">
+      <h1 class="text-6xl md:text-9xl font-black tracking-widest matrix-purple mb-4 logo-glow">GANAK</h1>
+      <p class="text-2xl md:text-4xl matrix-blue">CARREGANDO VEIOS PRIMORDIAIS...</p>
+      <div class="mt-12 text-purple-400 text-xl animate-pulse">Conectando a Irinthel • Aguarde</div>
+    </div>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="content" id="mainContent">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-purple-700">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <img src="SUA_LOGO_URL_AQUI" id="logo" alt="Ganak Logo" class="w-12 h-12 rounded-full border-2 border-purple-500">
+          <div>
+            <h1 class="text-3xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">GANAK SMP</h1>
+            <p class="text-xs text-purple-400 -mt-1">1.20.1 • IRINTHEL</p>
+          </div>
+        </div>
+        
+        <div class="hidden md:flex gap-8 text-lg">
+          <a href="#lore" class="hover:text-purple-400 transition">LORE</a>
+          <a href="#status" class="hover:text-purple-400 transition">STATUS</a>
+          <a href="#" class="hover:text-purple-400 transition">MAPA</a>
+          <a href="#" class="hover:text-purple-400 transition">DISCORD</a>
+          <a href="#" class="hover:text-purple-400 transition">LOJA</a>
+        </div>
+
+        <button onclick="toggleStatus()" id="statusBtn"
+          class="px-6 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-pink-500 hover:to-purple-500 font-bold rounded-full flex items-center gap-2 transition-all">
+          <span class="w-3 h-3 bg-green-400 rounded-full animate-pulse" id="statusDot"></span>
+          <span id="statusText">SERVIDOR ONLINE • 47/100</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-bg min-h-screen flex items-center justify-center relative pt-20">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,#c026d380_0%,transparent_70%)]"></div>
+      
+      <!-- Partículas mágicas -->
+      <canvas id="particles" class="absolute inset-0 pointer-events-none"></canvas>
+
+      <div class="max-w-5xl mx-auto text-center px-6 z-10">
+        <img src="SUA_LOGO_URL_AQUI" alt="Logo Ganak SMP" class="mx-auto w-52 md:w-64 drop-shadow-2xl mb-6 logo-glow rounded-xl">
+        
+        <h2 class="text-6xl md:text-7xl font-black tracking-tighter purple-glow">IRINTHEL CHAMA</h2>
+        <p class="text-2xl mt-3 text-purple-300">Um mundo vivo. Uma porta silenciosa. Uma nova vida.</p>
+
+        <div class="mt-12 flex justify-center gap-6 flex-wrap">
+          <button onclick="joinWorld()"
+            class="px-10 py-5 text-2xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:scale-110 active:scale-95 transition-all shadow-2xl shadow-purple-500 rounded-2xl flex items-center gap-3">
+            <i class="fa-solid fa-door-open"></i> ATRAVESSAR A PORTA
+          </button>
+          
+          <button onclick="showStatusModal()"
+            class="px-8 py-5 text-xl border-2 border-purple-400 hover:bg-purple-900/50 transition flex items-center gap-3 rounded-2xl">
+            <i class="fa-solid fa-satellite-dish"></i> VER STATUS
+          </button>
+        </div>
+
+        <div class="mt-16 flex justify-center gap-8 text-sm flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="text-green-400 text-3xl">●</span>
+            <div>
+              <span class="font-bold">47 jogadores</span><br>
+              <span class="text-purple-400">agora em Irinthel</span>
+            </div>
+          </div>
+          <div class="h-12 border-l border-purple-500 hidden sm:block"></div>
+          <div>Versão <span class="font-bold">1.20.1</span> • Fabric + 87 mods mágicos</div>
+        </div>
+      </div>
+
+      <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
+        <p class="text-purple-400 text-xs tracking-widest">ROLE PARA BAIXO • O MUNDO ESTÁ VIVO ↓</p>
+        <i class="fa-solid fa-chevron-down text-3xl text-purple-400 animate-bounce mt-2"></i>
+      </div>
+    </section>
+
+    <!-- Status Section -->
+    <section id="status" class="py-20 bg-zinc-950 border-t border-b border-purple-700">
+      <div class="max-w-4xl mx-auto px-6">
+        <h2 class="text-center text-5xl font-bold mb-10">STATUS DO SERVIDOR • <span class="text-purple-400">enx-ext-1.enx.host:10020</span></h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="scroll-container p-8 rounded-3xl text-center">
+            <div class="mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 orb flex items-center justify-center text-6xl mb-4">
+              🌌
+            </div>
+            <h3 class="text-4xl font-bold text-emerald-400" id="bigStatus">ONLINE</h3>
+            <p class="text-2xl mt-2 text-zinc-400">Irinthel pulsa</p>
+            <button onclick="refreshStatus()" class="mt-6 px-6 py-2 bg-zinc-800 hover:bg-purple-700 border border-purple-500 rounded-full">
+              🔄 Atualizar agora
+            </button>
+          </div>
+
+          <div class="space-y-6">
+            <div class="bg-zinc-900 p-5 rounded-2xl flex justify-between">
+              <span class="text-purple-300">Jogadores online</span>
+              <span class="font-mono text-2xl font-bold text-emerald-400">47 / 100</span>
+            </div>
+            <div class="bg-zinc-900 p-5 rounded-2xl flex justify-between">
+              <span class="text-purple-300">Ping médio</span>
+              <span class="font-mono text-2xl font-bold">32 ms</span>
+            </div>
+            <div class="bg-zinc-900 p-5 rounded-2xl flex justify-between">
+              <span class="text-purple-300">TPS</span>
+              <span class="font-mono text-2xl font-bold text-emerald-400">20.0</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col justify-center gap-4">
+            <button onclick="alert('IP escondido por segurança ✨\n\nO servidor está visível apenas para quem já tem o link privado.')"
+              class="w-full py-4 bg-purple-600 hover:bg-purple-500 text-xl font-bold rounded-2xl">
+              COPIAR LINK PRIVADO
+            </button>
+            <button onclick="window.open('https://discord.gg/ganaksmp','_blank')"
+              class="w-full py-4 border-2 border-purple-400 hover:bg-purple-900 text-xl font-bold rounded-2xl">
+              Entrar no Discord • 1.8k membros
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lore Section -->
+    <section id="lore" class="py-24 px-6 max-w-5xl mx-auto">
+      <h2 class="text-center text-5xl font-black mb-12 tracking-wider purple-glow">A LORE OFICIAL • IRINTHEL</h2>
+      
+      <div class="scroll-container p-12 md:p-16 rounded-3xl text-lg leading-relaxed text-purple-100">
+        <p class="mb-6 text-xl italic">"Em Irinthel, o mundo é vivo e consciente..."</p>
+        
+        <div class="text-justify text-base space-y-6">
+          Em Irinthel, o mundo é vivo e consciente. A magia percorre a terra através dos Veios Primordiais, pulsando como um coração invisível sob florestas luminosas, montanhas que respiram névoas prateadas, oceanos que refletem constelações e bosques onde o próprio som desaparece. No centro de tudo ergue-se a imensa Árvore-Eixo de Elyndar, símbolo do equilíbrio que sustenta o planeta.<br><br>
+          
+          Mas aqueles que agora caminham por suas planícies não nasceram ali. Em um dos momentos mais silenciosos e mais pesados de suas vidas, cada um de vocês viu uma porta. Ela não rangia. Não brilhava. Não prometia nada. Apenas estava ali. E, ainda assim, vocês sentiram. Ao atravessá-la, o mundo antigo se desfez como névoa ao amanhecer. Não houve dor, apenas uma estranha leveza.<br><br>
+          
+          Quando abriram os olhos, estavam sob duas luas pálidas, sobre relva azulada que pulsava suavemente sob seus pés. Irinthel os recebeu sem perguntas. Algumas coisas ficaram para trás. Nomes que já não vêm à mente. Rostos que quase se formam, mas nunca completamente. Lembranças que parecem sonhos distantes demais para tocar.<br><br>
+          
+          No lugar delas, há espaço. Espaço para aprender o ritmo dos Veios Primordiais. Para ouvir o sussurro das florestas. Para escolher caminhos sem o peso do que foi. Irinthel não exige que vocês recordem. Ele apenas oferece o amanhecer.
+        </div>
+
+        <div class="mt-12 text-center text-xs tracking-widest text-purple-400">— Extraído dos Pergaminhos Eternos de Elyndar • Ciclo 0</div>
+      </div>
+    </section>
+
+    <!-- Extra features -->
+    <section class="py-20 bg-gradient-to-b from-zinc-950 to-black">
+      <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 px-6">
+        <div class="bg-zinc-900/50 border border-purple-500/30 p-6 rounded-3xl text-center hover:scale-105 transition">
+          <i class="fa-solid fa-tree text-5xl text-emerald-400"></i>
+          <h3 class="mt-4 font-bold">Florestas que cantam</h3>
+          <p class="text-sm text-zinc-400">Árvores reagem à sua presença</p>
+        </div>
+        <div class="bg-zinc-900/50 border border-purple-500/30 p-6 rounded-3xl text-center hover:scale-105 transition">
+          <i class="fa-solid fa-mountain text-5xl text-violet-400"></i>
+          <h3 class="mt-4 font-bold">Montanhas vivas</h3>
+          <p class="text-sm text-zinc-400">Mudam de forma a cada lua cheia</p>
+        </div>
+        <div class="bg-zinc-900/50 border border-purple-500/30 p-6 rounded-3xl text-center hover:scale-105 transition">
+          <i class="fa-solid fa-dragon text-5xl text-rose-400"></i>
+          <h3 class="mt-4 font-bold">Bosses primordiais</h3>
+          <p class="text-sm text-zinc-400">A cada 7 dias um novo Veio desperta</p>
+        </div>
+        <div class="bg-zinc-900/50 border border-purple-500/30 p-6 rounded-3xl text-center hover:scale-105 transition">
+          <i class="fa-solid fa-users text-5xl text-cyan-400"></i>
+          <h3 class="mt-4 font-bold">Sem reset • Everlasting</h3>
+          <p class="text-sm text-zinc-400">Mundo único desde 12/03/2025</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black border-t border-purple-700 py-12">
+      <div class="max-w-7xl mx-auto px-6 text-center">
+        <p class="text-purple-400">Ganak SMP © 2025 • Feito com sangue de Veio Primordial e muito café</p>
+        <div class="flex justify-center gap-6 mt-6 text-2xl">
+          <a href="#" class="hover:text-purple-400"><i class="fa-brands fa-discord"></i></a>
+          <a href="#" class="hover:text-purple-400"><i class="fa-brands fa-youtube"></i></a>
+          <a href="#" class="hover:text-purple-400"><i class="fa-brands fa-tiktok"></i></a>
+        </div>
+        <p class="text-xs text-zinc-500 mt-8">IP escondido por pedido • Status atualizado em tempo real</p>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Matrix rain
+    const mCanvas = document.getElementById('matrix');
+    const mCtx = mCanvas.getContext('2d');
+    mCanvas.height = window.innerHeight;
+    mCanvas.width = window.innerWidth;
+
+    const chars = '01abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZカナガクイリントエルエリンダルヴェイオスプライモルディアリス🌌✨🌳☾';
+    const fontSize = 16;
+    const columns = mCanvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+      mCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      mCtx.fillRect(0, 0, mCanvas.width, mCanvas.height);
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+
+        mCtx.fillStyle = Math.random() > 0.4 ? '#c026d3' : '#3b82f6';
+        mCtx.font = fontSize + 'px monospace';
+        mCtx.fillText(text, x, y);
+
+        if (y >= mCanvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+    setInterval(drawMatrix, 45);
+
+    // Mostrar conteúdo após loading
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+        setTimeout(() => {
+          document.getElementById('mainContent').classList.add('show');
+        }, 800);
+      }, 4200); // ≈4.2 segundos de matrix
+    });
+
+    window.addEventListener('resize', () => {
+      mCanvas.height = window.innerHeight;
+      mCanvas.width = window.innerWidth;
+    });
+
+    // Suas funções originais
+    function toggleStatus() {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      if (dot.classList.contains('bg-green-400')) {
+        dot.classList.remove('bg-green-400'); dot.classList.add('bg-red-500');
+        text.textContent = "SERVIDOR OFFLINE • Manutenção";
+      } else {
+        dot.classList.add('bg-green-400'); dot.classList.remove('bg-red-500');
+        text.textContent = "SERVIDOR ONLINE • 47/100";
+      }
+    }
+
+    function refreshStatus() {
+      alert("✅ Status atualizado!\n\n🌌 Irinthel está pulsando forte hoje.");
+      document.getElementById('bigStatus').textContent = "ONLINE";
+      document.getElementById('bigStatus').classList.add('text-emerald-400');
+    }
+
+    function joinWorld() {
+      alert("🌠 Bem-vindo de volta, Viajante...\n\nO servidor está ONLINE.\n\nA porta está aberta. Entre quando quiser.");
+    }
+
+    function showStatusModal() {
+      alert("🔮 Status em tempo real\n\n✅ ONLINE\n47 jogadores\nTPS 20.0\nPing 29ms\n\nIP: escondido por segurança ✨\n\nQuer o link privado? Peça no Discord!");
+    }
+
+    // Partículas mágicas (do seu código original)
+    const pCanvas = document.getElementById('particles');
+    pCanvas.width = window.innerWidth;
+    pCanvas.height = window.innerHeight;
+    const pCtx = pCanvas.getContext('2d');
+    let particles = [];
+    for(let i=0; i<80; i++){
+      particles.push({
+        x: Math.random()*pCanvas.width,
+        y: Math.random()*pCanvas.height,
+        size: Math.random()*3+1,
+        speed: Math.random()*0.5+0.2
+      });
+    }
+    function animateParticles(){
+      pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+      pCtx.fillStyle = "#c026d3";
+      particles.forEach(p => {
+        pCtx.globalAlpha = 0.4;
+        pCtx.fillRect(p.x, p.y, p.size, p.size);
+        p.y += p.speed;
+        if(p.y > pCanvas.height) p.y = 0;
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+  </script>
+</body>
+</html>
